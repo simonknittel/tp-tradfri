@@ -11,11 +11,11 @@
   "categories": [
     {
       "id": "tp_tradfri",
-      "name": "IKEA Tradfri",
+      "name": "TP Tradfri",
       "actions": [
         {
           "id": "tpt_action_01",
-          "prefix": "IKEA Tradfri",
+          "prefix": "TP Tradfri",
           "name": "Toggle light",
           "description": "Turns on or off a single light",
           "type": "execute",

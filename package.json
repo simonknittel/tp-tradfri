@@ -4,8 +4,7 @@
   "description": "Plugin with IKEA Tradfri support for Touch Portal",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "pkg -t node12-win-x64 tp-tradfri.js && pkg -t node12-win-x64 tp-tradfri-startcheck.js",
-    "build-run": "pkg -t node12-win-x64 tp-tradfri.js"
+    "build": "pkg -t node12-win-x64 tp-tradfri.js && pkg -t node12-win-x64 tp-tradfri-startcheck.js"
   },
   "repository": {
     "type": "git",
