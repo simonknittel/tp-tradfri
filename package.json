@@ -1,23 +1,22 @@
 {
-  "name": "touch-portal-tradfri",
+  "name": "tp-tradfri",
   "version": "1.0.0",
-  "description": "Plugin for IKEA Tradfri support with Touch Portal",
-  "main": "ikea-tradfri.js",
+  "description": "Plugin with IKEA Tradfri support for Touch Portal",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "pkg -t node12-win-x64 ikea-tradfri.js && pkg -t node12-win-x64 ikea-tradfri-startcheck.js",
-    "build-run": "pkg -t node12-win-x64 ikea-tradfri.js"
+    "build": "pkg -t node12-win-x64 tp-tradfri.js && pkg -t node12-win-x64 tp-tradfri-startcheck.js",
+    "build-run": "pkg -t node12-win-x64 tp-tradfri.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simonknittel/touch-portal-tradfri.git"
+    "url": "git+https://github.com/simonknittel/tp-tradfri.git"
   },
   "author": "Simon Knittel",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/simonknittel/touch-portal-tradfri/issues"
+    "url": "https://github.com/simonknittel/tp-tradfri/issues"
   },
-  "homepage": "https://github.com/simonknittel/touch-portal-tradfri#readme",
+  "homepage": "https://github.com/simonknittel/tp-tradfri#readme",
   "devDependencies": {
     "pkg": "^4.4.9"
   },

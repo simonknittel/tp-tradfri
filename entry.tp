@@ -1,30 +1,30 @@
 {
   "sdk": 2,
   "version": 1,
-  "name": "IKEA Tradfri",
-  "id": "ikea_tradfri",
+  "name": "TP Tradfri",
+  "id": "tp_tradfri",
   "configuration" : {
     "colorDark" : "#FF0000",
     "colorLight" : "#00FF00"
   },
-  "plugin_start_cmd": "\"%TP_PLUGIN_FOLDER%ikea-tradfri\\ikea-tradfri-startcheck.exe\"",
+  "plugin_start_cmd": "\"%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri-startcheck.exe\"",
   "categories": [
     {
-      "id": "ikea_tradfri",
+      "id": "tp_tradfri",
       "name": "IKEA Tradfri",
       "actions": [
         {
-          "id": "it_action_01",
+          "id": "tpt_action_01",
           "prefix": "IKEA Tradfri",
           "name": "Toggle light",
           "description": "Turns on or off a single light",
           "type": "execute",
           "tryInline": true,
-          "format": "Light = {$it_light_01$} -> state = {$ik_light_state_01$}",
-          "execution_cmd": "%TP_PLUGIN_FOLDER%ikea-tradfri\\ikea-tradfri.exe toggleLight {$it_light_01$} {$ik_light_state_01$}",
+          "format": "Light = {$tpt_light_01$} -> state = {$ik_light_state_01$}",
+          "execution_cmd": "%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri.exe toggleLight {$tpt_light_01$} {$ik_light_state_01$}",
           "data": [
             {
-              "id": "it_light_01",
+              "id": "tpt_light_01",
               "type": "choice",
               "label": "Light",
               "default": "65587",
