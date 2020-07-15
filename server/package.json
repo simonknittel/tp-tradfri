@@ -1,0 +1,27 @@
+{
+  "name": "tp-tradfri-server",
+  "version": "1.0.0",
+  "description": "Plugin with IKEA Tradfri support for Touch Portal",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "pkg -t node12-win-x64 tp-tradfri-server.js",
+    "build:nexe": "nexe tp-tradfri-server.js -t windows-x64-12.18.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonknittel/tp-tradfri.git"
+  },
+  "author": "Simon Knittel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/simonknittel/tp-tradfri/issues"
+  },
+  "homepage": "https://github.com/simonknittel/tp-tradfri#readme",
+  "devDependencies": {
+    "pkg": "^4.4.9",
+    "nexe": "^3.3.7"
+  },
+  "dependencies": {
+    "node-tradfri-client": "^2.1.6"
+  }
+}

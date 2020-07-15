@@ -7,7 +7,7 @@
     "colorDark" : "#FF0000",
     "colorLight" : "#00FF00"
   },
-  "plugin_start_cmd": "\"%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri-startcheck.exe\"",
+  "plugin_start_cmd": "\"%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri-server.exe\"",
   "categories": [
     {
       "id": "tp_tradfri",
@@ -21,7 +21,7 @@
           "type": "execute",
           "tryInline": true,
           "format": "Light = {$tpt_light_01$} -> state = {$ik_light_state_01$}",
-          "execution_cmd": "%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri.exe toggleLight {$tpt_light_01$} {$ik_light_state_01$}",
+          "execution_cmd": "%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri-client.exe toggleLight {$tpt_light_01$} {$ik_light_state_01$}",
           "data": [
             {
               "id": "tpt_light_01",

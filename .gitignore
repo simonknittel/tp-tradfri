@@ -1,3 +1,6 @@
 node_modules/
 config.txt
 log.txt
+target/
+tp-tradfri-server.exe
+tp-tradfri-client.exe
