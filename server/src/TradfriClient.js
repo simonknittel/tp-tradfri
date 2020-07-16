@@ -1,11 +1,12 @@
 const fs = require('fs')
 const { performance } = require('perf_hooks')
 
+const { logger } = require('./Logger')
 const { file } = require('./utils')
 
 const {
   discoverGateway,
-  TradfriClient,
+  TradfriClient: NodeTradfriClient,
   AccessoryTypes,
 } = require('node-tradfri-client')
 
@@ -15,53 +16,104 @@ class TradfriClient {
   config = {}
   lights = {}
 
-  discover() {
-    performance.mark('discover')
+  constructor({ logger }) {
+    this.logger = logger
+  }
 
-    discoverGateway(10000)
-      .then(discovered)
-      .catch(err => {
-        error('Error while searching for a gateway')
-        error(JSON.stringify(err))
-        return exit('discover')
-      })
+  init() {
+    performance.mark('init')
+
+    discoverGateway()
+      .then(this.discovered.bind(this))
+      .catch(this.errorWhileDiscorvering.bind(this))
+  }
+
+  discovered(result) {
+    performance.mark('discovered')
+    performance.measure('init', 'init', 'discovered')
+
+    if (result === null) {
+      this.logger.error('No gateway found!')
+      return exit('discovered')
+    }
+
+    this.gateway = result
+    this.tradfri = new NodeTradfriClient(gateway.name)
+    this.authenticate()
+  }
+
+  errorWhileDiscorvering(err) {
+    this.logger.error('Error while searching for a gateway')
+    this.logger.error(JSON.stringify(err))
+    return exit('init')
   }
 
   exit(perfMark) {
     performance.mark('exit')
     performance.measure(perfMark, perfMark, 'exit')
-    tradfri.destroy()
+    this.tradfri.destroy()
   }
 
-  toggleLight(light, state) {
-    performance.mark('toggleLight')
-    performance.measure('parseCommandLineArguments', 'parseCommandLineArguments', 'toggleLight')
+  authenticate() {
+    performance.mark('authenticate')
+    performance.measure('discovered', 'discovered', 'authenticate')
 
-    if (!lights[light]) {
-      error('Unknown light!')
-      return exit('toggleLight')
-    }
+    fs.readFile(file('config.txt'), (err, data) => {
+      if (err) return this.logger.error('Error while reading config.txt')
 
-    lights[light].lightList[0]
-      .toggle()
-      .then(() => {
-        return exit('toggleLight')
+      const dataArray = data.toString().split('\n')
+      dataArray.forEach(entry => {
+        if (entry.trim() === '') return
+
+        const splittedEntry = entry.split('=')
+        this.config[splittedEntry[0].trim().toLocaleLowerCase()] = splittedEntry[1].trim()
       })
+
+      if (this.config.identity && this.config.psk) {
+        performance.mark('authenticated')
+        performance.measure('authenticate', 'authenticate', 'authenticated')
+        return this.connect()
+      }
+
+      if (this.config.security_code === '') return this.logger.error('No security_code provided!')
+      tradfri
+        .authenticate(this.config.security_code)
+        .then(this.authenticated.bind(this))
+        .catch(this.errorWhileAuthenticating.bind(this))
+    })
   }
 
-  parseCommandLineArguments() {
-    performance.mark('parseCommandLineArguments')
-    performance.measure('connected', 'connected', 'parseCommandLineArguments')
+  authenticated(result) {
+    performance.mark('authenticated')
+    performance.measure('authenticate', 'authenticate', 'authenticated')
 
-    switch (process.argv[2]) {
-      case 'toggleLight':
-        toggleLight(process.argv[3], process.argv[4])
-        break
+    this.config.identity = result.identity
+    this.config.psk = result.psk
 
-      default:
-        error('Unknown command line argument!')
-        return exit('parseCommandLineArguments')
-    }
+    fs.appendFile(
+      file('config.txt'),
+      `identity=${this.config.identity}\npsk=${this.config.psk}`,
+      (err) => {
+        if (err) return this.logger.error('Error while saving identity and psk to config.txt')
+        this.connect()
+      }
+    )
+  }
+
+  errorWhileAuthenticating(err) {
+    this.logger.error('Could not authenticate with gateway')
+    this.logger.error(JSON.stringify(err))
+    return this.exit('authenticated')
+  }
+
+  connect() {
+    performance.mark('connect')
+    performance.measure('authenticated', 'authenticated', 'connect')
+
+    tradfri
+      .connect(this.config.identity, this.config.psk)
+      .then(this.connected.bind(this))
+      .catch(this.errorWhileConnecting.bind(this))
   }
 
   connected() {
@@ -75,84 +127,54 @@ class TradfriClient {
       })
       .observeDevices()
 
-    setTimeout(parseCommandLineArguments, 200)
+    // TODO: Update Touch Portal
   }
 
-  connect() {
-    performance.mark('connect')
-    performance.measure('authenticated', 'authenticated', 'connect')
-
-    tradfri
-      .connect(config.identity, config.psk)
-      .then(connected)
-      .catch(err => {
-        error('Could not connect to gateway')
-        error(JSON.stringify(err))
-        return exit('connect')
-      })
+  errorWhileConnecting(err) {
+    this.logger.error('Could not connect to gateway')
+    this.logger.error(JSON.stringify(err))
+    return this.exit('connect')
   }
 
-  authenticated(result) {
-    performance.mark('authenticated')
-    performance.measure('authenticate', 'authenticate', 'authenticated')
+  toggleLight(light, state = 'Toggle') {
+    performance.mark('toggleLight')
 
-    config.identity = result.identity
-    config.psk = result.psk
-
-    fs.appendFile(file('config.txt'), `identity=${config.identity}\npsk=${config.psk}`, (err) => {
-      if (err) return error('Error while saving identity and psk to config.txt')
-      connect()
-    })
-  }
-
-  authenticate() {
-    performance.mark('authenticate')
-    performance.measure('discovered', 'discovered', 'authenticate')
-
-    fs.readFile(file('config.txt'), (err, data) => {
-      if (err) return error('Error while reading config.txt')
-
-      const dataArray = data.toString().split('\n')
-      dataArray.forEach(entry => {
-        if (entry.trim() === '') return
-
-        const splittedEntry = entry.split('=')
-        config[splittedEntry[0].trim().toLocaleLowerCase()] = splittedEntry[1].trim()
-      })
-
-      if (config.identity && config.psk) {
-        performance.mark('authenticated')
-        performance.measure('authenticate', 'authenticate', 'authenticated')
-        return connect()
-      }
-
-      if (config.security_code === '') return error('No security_code provided!')
-      tradfri
-        .authenticate(config.security_code)
-        .then(authenticated)
-        .catch(err => {
-          error('Could not authenticate with gateway')
-          error(JSON.stringify(err))
-          return exit('authenticated')
-        })
-    })
-  }
-
-  discovered(result) {
-    performance.mark('discovered')
-    performance.measure('init', 'init', 'discovered')
-
-    if (result === null) {
-      error('No gateway found!')
-      return exit('No gateway found!')
+    if (!lights[light]) {
+      this.logger.error('Unknown light!')
+      return exit('toggleLight')
     }
 
-    gateway = result
-    tradfri = new TradfriClient(gateway.name)
-    authenticate()
+    switch (state) {
+      case 'On':
+        lights[light].lightList[0]
+          .turnOn()
+          .then(() => {
+            this.logger.log(light, state)
+            return exit('toggleLight')
+          })
+        break;
+
+      case 'Off':
+        lights[light].lightList[0]
+          .turnOff()
+          .then(() => {
+            this.logger.log(light, state)
+            return exit('toggleLight')
+          })
+        break;
+
+      default:
+        lights[light].lightList[0]
+          .toggle()
+          .then(() => {
+            this.logger.log(light, state)
+            return exit('toggleLight')
+          })
+        break;
+    }
   }
 }
 
 module.exports = {
-  tardfriClient: new TradfriClient()
+  tradfriClient: new TradfriClient({ logger })
 }

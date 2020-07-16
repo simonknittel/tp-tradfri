@@ -3,14 +3,10 @@
   "version": 1,
   "name": "TP Tradfri",
   "id": "tp_tradfri",
-  "configuration" : {
-    "colorDark" : "#FF0000",
-    "colorLight" : "#00FF00"
-  },
   "plugin_start_cmd": "\"%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri-server.exe\"",
   "categories": [
     {
-      "id": "tp_tradfri",
+      "id": "tpt_category_01",
       "name": "TP Tradfri",
       "actions": [
         {
@@ -18,10 +14,9 @@
           "prefix": "TP Tradfri",
           "name": "Toggle light",
           "description": "Turns on or off a single light",
-          "type": "execute",
+          "type": "communicate",
           "tryInline": true,
-          "format": "Light = {$tpt_light_01$} -> state = {$ik_light_state_01$}",
-          "execution_cmd": "%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri-client.exe toggleLight {$tpt_light_01$} {$ik_light_state_01$}",
+          "format": "Light = {$tpt_light_01$} state = {$tpt_light_state_01$}",
           "data": [
             {
               "id": "tpt_light_01",
@@ -33,10 +28,15 @@
               ]
             },
             {
-              "id": "ik_light_state_01",
-              "type": "switch",
+              "id": "tpt_light_state_01",
+              "type": "choice",
               "label": "Light state",
-              "default": true
+              "default": "Toggle",
+              "valueChoices": [
+                "Toggle",
+                "On",
+                "Off"
+              ]
             }
           ]
         }
