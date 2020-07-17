@@ -7,7 +7,7 @@ const {
   AccessoryTypes,
 } = require('node-tradfri-client')
 
-const { file } = require('./utils')
+const { file, isEqual } = require('./utils')
 const { logger } = require('./Logger')
 const { messageBroker } = require('./MessageBroker')
 
@@ -153,12 +153,11 @@ class TradfriClient {
     // this.authenticate(true)
   }
 
-  /**
-   * BUG: RGBW-Streifen Schrank (65570) causes a "device updated" every two seconds or so
-   */
   deviceUpdated(device) {
     if (device.type !== AccessoryTypes.lightbulb) return
     this.lights[device.instanceId] = device
+
+    const oldList = [...this.tpStates.lights]
 
     this.tpStates.lights = []
 
@@ -167,6 +166,9 @@ class TradfriClient {
         this.tpStates.lights.push(`${this.lights[light].name} (${light})`)
       }
     }
+
+    // Some devices cause 'device updated' events even tho nothing happened
+    if (isEqual(this.tpStates.lights, oldList)) return
 
     this.messageBroker.emit('deviceUpdated', this.tpStates.lights)
   }
