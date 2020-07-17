@@ -34,24 +34,24 @@ class TradfriClient {
 
     if (result === null) {
       this.logger.error('No gateway found!')
-      return exit('discovered')
+      return this.exit('discovered')
     }
 
     this.gateway = result
-    this.tradfri = new NodeTradfriClient(gateway.name)
+    this.tradfri = new NodeTradfriClient(this.gateway.name)
     this.authenticate()
   }
 
   errorWhileDiscorvering(err) {
     this.logger.error('Error while searching for a gateway')
-    this.logger.error(JSON.stringify(err))
-    return exit('init')
+    this.logger.error(err)
+    return this.exit('init')
   }
 
   exit(perfMark) {
     performance.mark('exit')
     performance.measure(perfMark, perfMark, 'exit')
-    this.tradfri.destroy()
+    if (this.tradfri) this.tradfri.destroy()
   }
 
   authenticate() {
@@ -59,7 +59,11 @@ class TradfriClient {
     performance.measure('discovered', 'discovered', 'authenticate')
 
     fs.readFile(file('config.txt'), (err, data) => {
-      if (err) return this.logger.error('Error while reading config.txt')
+      if (err) {
+        this.logger.error('Error while reading config.txt')
+        this.logger.error(err)
+        return
+      }
 
       const dataArray = data.toString().split('\n')
       dataArray.forEach(entry => {
@@ -76,7 +80,7 @@ class TradfriClient {
       }
 
       if (this.config.security_code === '') return this.logger.error('No security_code provided!')
-      tradfri
+      this.tradfri
         .authenticate(this.config.security_code)
         .then(this.authenticated.bind(this))
         .catch(this.errorWhileAuthenticating.bind(this))
@@ -102,7 +106,7 @@ class TradfriClient {
 
   errorWhileAuthenticating(err) {
     this.logger.error('Could not authenticate with gateway')
-    this.logger.error(JSON.stringify(err))
+    this.logger.error(err)
     return this.exit('authenticated')
   }
 
@@ -110,7 +114,7 @@ class TradfriClient {
     performance.mark('connect')
     performance.measure('authenticated', 'authenticated', 'connect')
 
-    tradfri
+    this.tradfri
       .connect(this.config.identity, this.config.psk)
       .then(this.connected.bind(this))
       .catch(this.errorWhileConnecting.bind(this))
@@ -120,10 +124,10 @@ class TradfriClient {
     performance.mark('connected')
     performance.measure('connect', 'connect', 'connected')
 
-    tradfri
+    this.tradfri
       .on('device updated', (device) => {
         if (device.type !== AccessoryTypes.lightbulb) return
-        lights[device.instanceId] = device
+        this.lights[device.instanceId] = device
       })
       .observeDevices()
 
@@ -132,43 +136,43 @@ class TradfriClient {
 
   errorWhileConnecting(err) {
     this.logger.error('Could not connect to gateway')
-    this.logger.error(JSON.stringify(err))
+    this.logger.error(err)
+
+    // TODO: Try to re-authenticate
+
     return this.exit('connect')
   }
 
   toggleLight(light, state = 'Toggle') {
     performance.mark('toggleLight')
 
-    if (!lights[light]) {
+    if (!this.lights[light]) {
       this.logger.error('Unknown light!')
-      return exit('toggleLight')
+      return this.exit('toggleLight')
     }
 
     switch (state) {
       case 'On':
-        lights[light].lightList[0]
+        this.lights[light].lightList[0]
           .turnOn()
           .then(() => {
-            this.logger.log(light, state)
-            return exit('toggleLight')
+            this.logger.log(`Light ${light} turned on.`)
           })
         break;
 
       case 'Off':
-        lights[light].lightList[0]
+        this.lights[light].lightList[0]
           .turnOff()
           .then(() => {
-            this.logger.log(light, state)
-            return exit('toggleLight')
+            this.logger.log(`Light ${light} turned off.`)
           })
         break;
 
       default:
-        lights[light].lightList[0]
+        this.lights[light].lightList[0]
           .toggle()
           .then(() => {
-            this.logger.log(light, state)
-            return exit('toggleLight')
+            this.logger.log(`Light ${light} toggled.`)
           })
         break;
     }

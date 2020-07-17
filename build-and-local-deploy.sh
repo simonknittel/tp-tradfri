@@ -1,8 +1,7 @@
 cd server
 npm run build
 
-cd ../
-cd client/v3/
+cd ../client/v3/
 cargo build --release
 
 cd ../../

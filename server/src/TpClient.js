@@ -37,11 +37,7 @@ class TpClient {
   }
 
   onData(data) {
-    console.log('onDataaaaaaaaaaaaaaaa')
-
     const response = JSON.parse(data.toString())
-
-    this.logger.log(response)
 
     switch (response.type) {
       case 'info':
@@ -73,13 +69,14 @@ class TpClient {
     this.logger.log('Connection closed by Touch Portal.')
     if (this.tradfriClient.tradfri) this.tradfriClient.exit()
     this.tpClient.end()
+    // TODO: Doesn't exit the process yet
   }
 
   action(response) {
     switch (response.actionId) {
       case 'tpt_action_01':
-        const light = response.data.find(entry => entry.id === 'tpt_light_01')
-        const state = response.data.find(entry => entry.id === 'tpt_light_state_01')
+        const light = response.data.find(entry => entry.id === 'tpt_light_01').value
+        const state = response.data.find(entry => entry.id === 'tpt_light_state_01').value
         this.tradfriClient.toggleLight(light, state)
         break
     }
