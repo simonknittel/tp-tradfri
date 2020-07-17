@@ -1,23 +1,34 @@
 const fs = require('fs')
 const { performance } = require('perf_hooks')
 
-const { logger } = require('./Logger')
-const { file } = require('./utils')
-
 const {
   discoverGateway,
   TradfriClient: NodeTradfriClient,
   AccessoryTypes,
 } = require('node-tradfri-client')
 
+const { file } = require('./utils')
+const { logger } = require('./Logger')
+const { messageBroker } = require('./MessageBroker')
+
 class TradfriClient {
   tradfri = null
   gateway = null
   config = {}
   lights = {}
+  tpStates = {
+    lights: []
+  }
 
-  constructor({ logger }) {
+  constructor({ logger, messageBroker }) {
     this.logger = logger
+    this.messageBroker = messageBroker
+
+    this.messageBroker.once('tpPaired', this.init.bind(this))
+    this.messageBroker.on('toggleLight', this.toggleLight.bind(this))
+    this.messageBroker.once('tpClosed', this.exit.bind(this))
+    this.messageBroker.once('tpErrored', this.exit.bind(this))
+    this.messageBroker.once('tpDisconnected', this.exit.bind(this))
   }
 
   init() {
@@ -39,6 +50,7 @@ class TradfriClient {
 
     this.gateway = result
     this.tradfri = new NodeTradfriClient(this.gateway.name)
+
     this.authenticate()
   }
 
@@ -54,7 +66,7 @@ class TradfriClient {
     if (this.tradfri) this.tradfri.destroy()
   }
 
-  authenticate() {
+  authenticate(force = false) {
     performance.mark('authenticate')
     performance.measure('discovered', 'discovered', 'authenticate')
 
@@ -73,7 +85,11 @@ class TradfriClient {
         this.config[splittedEntry[0].trim().toLocaleLowerCase()] = splittedEntry[1].trim()
       })
 
-      if (this.config.identity && this.config.psk) {
+      if (
+        force === false
+        && this.config.identity
+        && this.config.psk
+      ) {
         performance.mark('authenticated')
         performance.measure('authenticate', 'authenticate', 'authenticated')
         return this.connect()
@@ -125,25 +141,37 @@ class TradfriClient {
     performance.measure('connect', 'connect', 'connected')
 
     this.tradfri
-      .on('device updated', (device) => {
-        if (device.type !== AccessoryTypes.lightbulb) return
-        this.lights[device.instanceId] = device
-      })
+      .on('device updated', this.deviceUpdated.bind(this))
       .observeDevices()
-
-    // TODO: Update Touch Portal
   }
 
   errorWhileConnecting(err) {
     this.logger.error('Could not connect to gateway')
     this.logger.error(err)
 
-    // TODO: Try to re-authenticate
-
-    return this.exit('connect')
+    this.exit()
+    // this.authenticate(true)
   }
 
-  toggleLight(light, state = 'Toggle') {
+  /**
+   * BUG: RGBW-Streifen Schrank (65570) causes a "device updated" every two seconds or so
+   */
+  deviceUpdated(device) {
+    if (device.type !== AccessoryTypes.lightbulb) return
+    this.lights[device.instanceId] = device
+
+    this.tpStates.lights = []
+
+    for (const light in this.lights) {
+      if (this.lights.hasOwnProperty(light)) {
+        this.tpStates.lights.push(`${this.lights[light].name} (${light})`)
+      }
+    }
+
+    this.messageBroker.emit('deviceUpdated', this.tpStates.lights)
+  }
+
+  toggleLight({ light, state }) {
     performance.mark('toggleLight')
 
     if (!this.lights[light]) {
@@ -180,5 +208,5 @@ class TradfriClient {
 }
 
 module.exports = {
-  tradfriClient: new TradfriClient({ logger })
+  tradfriClient: new TradfriClient({ logger, messageBroker })
 }

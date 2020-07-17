@@ -21,11 +21,7 @@
             {
               "id": "tpt_light_01",
               "type": "choice",
-              "label": "Light",
-              "default": "65587",
-              "valueChoices": [
-                "65587"
-              ]
+              "label": "Light"
             },
             {
               "id": "tpt_light_state_01",

@@ -1,7 +1,8 @@
-const { PerformanceObserver } = require('perf_hooks')
+// const { PerformanceObserver } = require('perf_hooks')
 
 const { logger } = require('./Logger')
 require('./TpClient.js')
+require('./TradfriClient.js')
 
 process.on('uncaughtException', (err) => {
   logger.error('uncaughtException')

@@ -2,16 +2,19 @@
 // http://touch-portal.com/api/
 
 const net = require('net')
+const { throttle } = require('./utils')
 const { logger } = require('./Logger')
-const { tradfriClient } = require('./TradfriClient')
+const { messageBroker } = require('./MessageBroker')
 
 class TpClient {
   TP_PORT = process.env.TP_PORT || 12136
   client = null
 
-  constructor({ logger, tradfriClient }) {
+  constructor({ logger, messageBroker }) {
     this.logger = logger
-    this.tradfriClient = tradfriClient
+    this.messageBroker = messageBroker
+
+    this.messageBroker.on('deviceUpdated', throttle(this.updateLightsState.bind(this), 500))
 
     this.tpClient = new net.createConnection({ port: this.TP_PORT }, this.onConnect.bind(this))
     this.tpClient.on('error', this.onError.bind(this))
@@ -32,7 +35,7 @@ class TpClient {
 
   onError(e) {
     this.logger.error(e)
-    if (this.tradfriClient.tradfri) this.tradfriClient.exit()
+    this.messageBroker.emit('tpErrored')
     this.tpClient.end()
   }
 
@@ -58,16 +61,18 @@ class TpClient {
 
   onDisconnect() {
     this.logger.log('Disconnected from Touch Portal.')
+    this.messageBroker.emit('tpDisconnected')
+    this.tpClient.end()
   }
 
   pluginPaired() {
     this.logger.log('Paired with Touch Portal.')
-    this.tradfriClient.init()
+    this.messageBroker.emit('tpPaired')
   }
 
   pluginClosed() {
     this.logger.log('Connection closed by Touch Portal.')
-    if (this.tradfriClient.tradfri) this.tradfriClient.exit()
+    this.messageBroker.emit('tpClosed')
     this.tpClient.end()
     // TODO: Doesn't exit the process yet
   }
@@ -77,12 +82,22 @@ class TpClient {
       case 'tpt_action_01':
         const light = response.data.find(entry => entry.id === 'tpt_light_01').value
         const state = response.data.find(entry => entry.id === 'tpt_light_state_01').value
-        this.tradfriClient.toggleLight(light, state)
+        this.messageBroker.emit('toggleLight', { light, state })
         break
     }
+  }
+
+  updateLightsState(lights) {
+    const json = JSON.stringify({
+      type: "choiceUpdate",
+      id: "tpt_light_01",
+      value: lights
+    })
+
+    this.tpClient.write(json + '\n')
   }
 }
 
 module.exports = {
-  tpClient: new TpClient({ logger, tradfriClient })
+  tpClient: new TpClient({ logger, messageBroker })
 }
