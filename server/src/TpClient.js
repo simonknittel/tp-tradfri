@@ -15,6 +15,7 @@ class TpClient {
     this.messageBroker = messageBroker
 
     this.messageBroker.on('deviceUpdated', throttle(this.updateLightsState.bind(this), 500))
+    this.messageBroker.on('groupUpdated', throttle(this.updateGroupsState.bind(this), 500))
 
     this.tpClient = new net.createConnection({ port: this.TP_PORT }, this.onConnect.bind(this))
     this.tpClient.on('error', this.onError.bind(this))
@@ -41,6 +42,8 @@ class TpClient {
 
   onData(data) {
     const response = JSON.parse(data.toString())
+    this.logger.log('onData')
+    this.logger.log(response)
 
     switch (response.type) {
       case 'info':
@@ -80,9 +83,24 @@ class TpClient {
   action(response) {
     switch (response.actionId) {
       case 'tpt_action_01':
-        const light = response.data.find(entry => entry.id === 'tpt_light_01').value
-        const state = response.data.find(entry => entry.id === 'tpt_light_state_01').value
-        this.messageBroker.emit('toggleLight', { light, state })
+        const params = {
+          light: response.data.find(entry => entry.id === 'tpt_light_01').value,
+          state: response.data.find(entry => entry.id === 'tpt_light_state_01').value,
+        }
+
+        const brightness = response.data.find(entry => entry.id === 'tpt_light_brightness_01')
+        const color = response.data.find(entry => entry.id === 'tpt_light_color_01')
+        if (brightness.value) params.brightness = brightness.value
+        if (color.value) params.color = color.value
+
+        this.messageBroker.emit('toggleLight', params)
+        break
+
+      case 'tpt_action_02':
+        this.messageBroker.emit('toggleGroup', {
+          group: response.data.find(entry => entry.id === 'tpt_group_01').value,
+          state: response.data.find(entry => entry.id === 'tpt_group_state_01').value,
+        })
         break
     }
   }
@@ -92,6 +110,16 @@ class TpClient {
       type: "choiceUpdate",
       id: "tpt_light_01",
       value: lights
+    })
+
+    this.tpClient.write(json + '\n')
+  }
+
+  updateGroupsState(groups) {
+    const json = JSON.stringify({
+      type: "choiceUpdate",
+      id: "tpt_group_01",
+      value: groups
     })
 
     this.tpClient.write(json + '\n')

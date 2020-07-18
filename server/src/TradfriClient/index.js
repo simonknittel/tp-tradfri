@@ -3,22 +3,24 @@ const fs = require('fs')
 const {
   discoverGateway,
   TradfriClient: NodeTradfriClient,
-  AccessoryTypes,
 } = require('node-tradfri-client')
 
-const { file, isEqual } = require('../utils')
+const { file } = require('../utils')
 const { logger } = require('../Logger')
 const { messageBroker } = require('../MessageBroker')
 
 const actionMethods = require('./actionMethods')
+const listenerMethods = require('./listenerMethods')
 
 class TradfriClient {
   tradfri = null
   gateway = null
   config = {}
   lights = {}
+  groups = {}
   tpStates = {
-    lights: []
+    lights: [],
+    groups: []
   }
 
   constructor({ logger, messageBroker }) {
@@ -27,6 +29,7 @@ class TradfriClient {
 
     this.messageBroker.once('tpPaired', this.init.bind(this))
     this.messageBroker.on('toggleLight', this.toggleLight.bind(this))
+    this.messageBroker.on('toggleGroup', this.toggleGroup.bind(this))
     this.messageBroker.once('tpClosed', this.exit.bind(this))
     this.messageBroker.once('tpErrored', this.exit.bind(this))
     this.messageBroker.once('tpDisconnected', this.exit.bind(this))
@@ -123,6 +126,11 @@ class TradfriClient {
     this.tradfri
       .on('device updated', this.deviceUpdated.bind(this))
       .observeDevices()
+
+    this.tradfri
+      .on('group updated', this.groupUpdated.bind(this))
+      .on('scene updated', this.sceneUpdated.bind(this))
+      .observeGroupsAndScenes()
   }
 
   errorWhileConnecting(err) {
@@ -132,30 +140,11 @@ class TradfriClient {
     this.exit()
     // this.authenticate(true)
   }
-
-  deviceUpdated(device) {
-    if (device.type !== AccessoryTypes.lightbulb) return
-    this.lights[device.instanceId] = device
-
-    const oldList = [...this.tpStates.lights]
-
-    this.tpStates.lights = []
-
-    for (const light in this.lights) {
-      if (this.lights.hasOwnProperty(light)) {
-        this.tpStates.lights.push(`${this.lights[light].name} (${light})`)
-      }
-    }
-
-    // Some devices cause 'device updated' events even tho nothing happened
-    if (isEqual(this.tpStates.lights, oldList)) return
-
-    this.messageBroker.emit('deviceUpdated', this.tpStates.lights)
-  }
 }
 
 const importedMethods = Object.assign({},
-  actionMethods
+  actionMethods,
+  listenerMethods
 )
 for (const name in importedMethods) {
   if (!importedMethods.hasOwnProperty(name)) continue

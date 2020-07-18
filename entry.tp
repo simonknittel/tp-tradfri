@@ -12,11 +12,11 @@
         {
           "id": "tpt_action_01",
           "prefix": "TP Tradfri",
-          "name": "Toggle light",
-          "description": "Turns on or off a single light",
+          "name": "Light",
+          "description": "Toggle/Turn on/Turn off & set brightness of a light",
           "type": "communicate",
           "tryInline": true,
-          "format": "Light = {$tpt_light_01$} state = {$tpt_light_state_01$}",
+          "format": "Light = {$tpt_light_01$} State = {$tpt_light_state_01$} Brightness = {$tpt_light_brightness_01$} Color = {$tpt_light_color_01$}",
           "data": [
             {
               "id": "tpt_light_01",
@@ -30,6 +30,57 @@
               "default": "Toggle",
               "valueChoices": [
                 "Toggle",
+                "On",
+                "Off"
+              ]
+            },
+            {
+              "id": "tpt_light_brightness_01",
+              "type": "choice",
+              "label": "Light brightness",
+              "default": "",
+              "valueChoices": [
+                "",
+                "0%",
+                "10%",
+                "20%",
+                "30%",
+                "40%",
+                "50%",
+                "60%",
+                "70%",
+                "80%",
+                "90%",
+                "100%"
+              ]
+            },
+            {
+              "id": "tpt_light_color_01",
+              "type": "color",
+              "label": "Light color"
+            }
+          ]
+        },
+        {
+          "id": "tpt_action_02",
+          "prefix": "TP Tradfri",
+          "name": "Group",
+          "description": "Turn on/Turn off & set brightness of a group",
+          "type": "communicate",
+          "tryInline": true,
+          "format": "Group = {$tpt_group_01$} State = {$tpt_group_state_01$}",
+          "data": [
+            {
+              "id": "tpt_group_01",
+              "type": "choice",
+              "label": "Group"
+            },
+            {
+              "id": "tpt_group_state_01",
+              "type": "choice",
+              "label": "Group state",
+              "default": "On",
+              "valueChoices": [
                 "On",
                 "Off"
               ]
