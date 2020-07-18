@@ -1,5 +1,4 @@
 const fs = require('fs')
-const { performance } = require('perf_hooks')
 
 const {
   discoverGateway,
@@ -7,9 +6,11 @@ const {
   AccessoryTypes,
 } = require('node-tradfri-client')
 
-const { file, isEqual } = require('./utils')
-const { logger } = require('./Logger')
-const { messageBroker } = require('./MessageBroker')
+const { file, isEqual } = require('../utils')
+const { logger } = require('../Logger')
+const { messageBroker } = require('../MessageBroker')
+
+const actionMethods = require('./actionMethods')
 
 class TradfriClient {
   tradfri = null
@@ -32,20 +33,15 @@ class TradfriClient {
   }
 
   init() {
-    performance.mark('init')
-
     discoverGateway()
       .then(this.discovered.bind(this))
       .catch(this.errorWhileDiscorvering.bind(this))
   }
 
   discovered(result) {
-    performance.mark('discovered')
-    performance.measure('init', 'init', 'discovered')
-
     if (result === null) {
       this.logger.error('No gateway found!')
-      return this.exit('discovered')
+      return this.exit()
     }
 
     this.gateway = result
@@ -57,19 +53,14 @@ class TradfriClient {
   errorWhileDiscorvering(err) {
     this.logger.error('Error while searching for a gateway')
     this.logger.error(err)
-    return this.exit('init')
+    return this.exit()
   }
 
-  exit(perfMark) {
-    performance.mark('exit')
-    performance.measure(perfMark, perfMark, 'exit')
+  exit() {
     if (this.tradfri) this.tradfri.destroy()
   }
 
   authenticate(force = false) {
-    performance.mark('authenticate')
-    performance.measure('discovered', 'discovered', 'authenticate')
-
     fs.readFile(file('config.txt'), (err, data) => {
       if (err) {
         this.logger.error('Error while reading config.txt')
@@ -90,8 +81,6 @@ class TradfriClient {
         && this.config.identity
         && this.config.psk
       ) {
-        performance.mark('authenticated')
-        performance.measure('authenticate', 'authenticate', 'authenticated')
         return this.connect()
       }
 
@@ -104,9 +93,6 @@ class TradfriClient {
   }
 
   authenticated(result) {
-    performance.mark('authenticated')
-    performance.measure('authenticate', 'authenticate', 'authenticated')
-
     this.config.identity = result.identity
     this.config.psk = result.psk
 
@@ -123,13 +109,10 @@ class TradfriClient {
   errorWhileAuthenticating(err) {
     this.logger.error('Could not authenticate with gateway')
     this.logger.error(err)
-    return this.exit('authenticated')
+    return this.exit()
   }
 
   connect() {
-    performance.mark('connect')
-    performance.measure('authenticated', 'authenticated', 'connect')
-
     this.tradfri
       .connect(this.config.identity, this.config.psk)
       .then(this.connected.bind(this))
@@ -137,9 +120,6 @@ class TradfriClient {
   }
 
   connected() {
-    performance.mark('connected')
-    performance.measure('connect', 'connect', 'connected')
-
     this.tradfri
       .on('device updated', this.deviceUpdated.bind(this))
       .observeDevices()
@@ -172,41 +152,14 @@ class TradfriClient {
 
     this.messageBroker.emit('deviceUpdated', this.tpStates.lights)
   }
+}
 
-  toggleLight({ light, state }) {
-    performance.mark('toggleLight')
-
-    if (!this.lights[light]) {
-      this.logger.error('Unknown light!')
-      return this.exit('toggleLight')
-    }
-
-    switch (state) {
-      case 'On':
-        this.lights[light].lightList[0]
-          .turnOn()
-          .then(() => {
-            this.logger.log(`Light ${light} turned on.`)
-          })
-        break;
-
-      case 'Off':
-        this.lights[light].lightList[0]
-          .turnOff()
-          .then(() => {
-            this.logger.log(`Light ${light} turned off.`)
-          })
-        break;
-
-      default:
-        this.lights[light].lightList[0]
-          .toggle()
-          .then(() => {
-            this.logger.log(`Light ${light} toggled.`)
-          })
-        break;
-    }
-  }
+const importedMethods = Object.assign({},
+  actionMethods
+)
+for (const name in importedMethods) {
+  if (!importedMethods.hasOwnProperty(name)) continue
+  TradfriClient.prototype[name] = importedMethods[name]
 }
 
 module.exports = {

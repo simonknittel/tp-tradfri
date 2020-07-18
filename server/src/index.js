@@ -1,8 +1,8 @@
 // const { PerformanceObserver } = require('perf_hooks')
 
 const { logger } = require('./Logger')
-require('./TpClient.js')
-require('./TradfriClient.js')
+require('./TpClient')
+require('./TradfriClient/index')
 
 process.on('uncaughtException', (err) => {
   logger.error('uncaughtException')
@@ -10,9 +10,3 @@ process.on('uncaughtException', (err) => {
   logger.error(err.stack)
   process.exitCode = 1
 })
-
-// const obs = new PerformanceObserver(list => {
-//   const entry = list.getEntries()[0]
-//   logger.log(`Time for ('${entry.name}'): ${entry.duration}`)
-// })
-// obs.observe({ entryTypes: ['measure'], buffered: false })
