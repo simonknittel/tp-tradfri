@@ -1,11 +1,17 @@
 {
   "name": "tp-tradfri",
   "version": "1.0.0",
-  "description": "Plugin with IKEA Tradfri support for Touch Portal",
+  "description": "A plugin for IKEA TRÅDFRI support in Touch Portal",
+  "keywords": [
+    "ikea",
+    "tradfri",
+    "touch portal",
+    "plugin",
+    "smart home"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "pkg -t node12-win-x64 src/index.js --output dist/tp-tradfri.exe",
-    "build:nexe": "nexe src/index.js -t windows-x64-12.18.2 -o dist/tp-tradfri.exe"
+    "build": "pkg -t node12-win-x64 src/index.js --output dist/tp-tradfri.exe"
   },
   "repository": {
     "type": "git",
@@ -18,8 +24,7 @@
   },
   "homepage": "https://github.com/simonknittel/tp-tradfri#readme",
   "devDependencies": {
-    "pkg": "^4.4.9",
-    "nexe": "^3.3.7"
+    "pkg": "^4.4.9"
   },
   "dependencies": {
     "lodash": "^4.17.19",
