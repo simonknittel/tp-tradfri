@@ -44,7 +44,7 @@ function toggleLight({ light, state, brightness, color }) {
   }
 }
 
-function toggleGroup({ group, state }) {
+function toggleGroup({ group, state, brightness }) {
   const re = /\(.*\)$/
 
   group = re.exec(group)[0]
@@ -56,10 +56,15 @@ function toggleGroup({ group, state }) {
     return this.exit()
   }
 
+  if (brightness) brightness = parseInt(brightness.replace('%', ''))
+
   switch (state) {
     case 'On':
-      this.groups[group]
-        .turnOn()
+      this.tradfri
+        .operateGroup(this.groups[group], {
+          onOff: true,
+          dimmer: brightness,
+        }, true)
         .then(() => {
           this.logger.log(`toggleGroup: ${group}, ${state}`)
         })

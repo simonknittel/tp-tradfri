@@ -81,27 +81,29 @@ class TpClient {
   }
 
   action(response) {
-    switch (response.actionId) {
-      case 'tpt_action_01':
-        const params = {
-          light: response.data.find(entry => entry.id === 'tpt_light_01').value,
-          state: response.data.find(entry => entry.id === 'tpt_light_state_01').value,
-        }
+    if (response.actionId === 'tpt_action_01') {
+      const params = {
+        light: response.data.find(entry => entry.id === 'tpt_light_01').value,
+        state: response.data.find(entry => entry.id === 'tpt_light_state_01').value,
+      }
 
-        const brightness = response.data.find(entry => entry.id === 'tpt_light_brightness_01')
-        const color = response.data.find(entry => entry.id === 'tpt_light_color_01')
-        if (brightness.value) params.brightness = brightness.value
-        if (color.value) params.color = color.value
+      const brightness = response.data.find(entry => entry.id === 'tpt_light_brightness_01')
+      const color = response.data.find(entry => entry.id === 'tpt_light_color_01')
+      if (brightness.value) params.brightness = brightness.value
+      if (color.value) params.color = color.value
 
-        this.messageBroker.emit('toggleLight', params)
-        break
+      this.messageBroker.emit('toggleLight', params)
 
-      case 'tpt_action_02':
-        this.messageBroker.emit('toggleGroup', {
-          group: response.data.find(entry => entry.id === 'tpt_group_01').value,
-          state: response.data.find(entry => entry.id === 'tpt_group_state_01').value,
-        })
-        break
+    } else if (response.actionId === 'tpt_action_02') {
+      const params = {
+        group: response.data.find(entry => entry.id === 'tpt_group_01').value,
+        state: response.data.find(entry => entry.id === 'tpt_group_state_01').value,
+      }
+
+      const brightness = response.data.find(entry => entry.id === 'tpt_group_brightness_01')
+      if (brightness.value) params.brightness = brightness.value
+
+      this.messageBroker.emit('toggleGroup', params)
     }
   }
 

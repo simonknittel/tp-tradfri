@@ -1,3 +1,5 @@
+// https://github.com/AlCalzone/node-tradfri-client/
+
 const fs = require('fs')
 
 const {

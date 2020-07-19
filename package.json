@@ -1,11 +1,11 @@
 {
-  "name": "tp-tradfri-client",
-  "version": "2.0.0",
+  "name": "tp-tradfri",
+  "version": "1.0.0",
   "description": "Plugin with IKEA Tradfri support for Touch Portal",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "pkg -t node12-win-x64 tp-tradfri-client.js",
-    "build:nexe": "nexe tp-tradfri-client.js -t windows-x64-12.18.2"
+    "build": "pkg -t node12-win-x64 src/index.js --output dist/tp-tradfri.exe",
+    "build:nexe": "nexe src/index.js -t windows-x64-12.18.2 -o dist/tp-tradfri.exe"
   },
   "repository": {
     "type": "git",
@@ -20,5 +20,9 @@
   "devDependencies": {
     "pkg": "^4.4.9",
     "nexe": "^3.3.7"
+  },
+  "dependencies": {
+    "lodash": "^4.17.19",
+    "node-tradfri-client": "^2.1.6"
   }
 }

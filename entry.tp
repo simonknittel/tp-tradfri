@@ -3,7 +3,7 @@
   "version": 1,
   "name": "TP Tradfri",
   "id": "tp_tradfri",
-  "plugin_start_cmd": "\"%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri-server.exe\"",
+  "plugin_start_cmd": "\"%TP_PLUGIN_FOLDER%tp-tradfri\\tp-tradfri.exe\"",
   "categories": [
     {
       "id": "tpt_category_01",
@@ -68,7 +68,7 @@
           "description": "Turn on/Turn off & set brightness of a group",
           "type": "communicate",
           "tryInline": true,
-          "format": "Group = {$tpt_group_01$} State = {$tpt_group_state_01$}",
+          "format": "Group = {$tpt_group_01$} State = {$tpt_group_state_01$} Brightness = {$tpt_group_brightness_01$}",
           "data": [
             {
               "id": "tpt_group_01",
@@ -83,6 +83,26 @@
               "valueChoices": [
                 "On",
                 "Off"
+              ]
+            },
+            {
+              "id": "tpt_group_brightness_01",
+              "type": "choice",
+              "label": "Group brightness",
+              "default": "",
+              "valueChoices": [
+                "",
+                "0%",
+                "10%",
+                "20%",
+                "30%",
+                "40%",
+                "50%",
+                "60%",
+                "70%",
+                "80%",
+                "90%",
+                "100%"
               ]
             }
           ]
