@@ -1,4 +1,4 @@
-# TP Tradfri
+# TP Tradfri (:warning: WORK IN PROGRESS)
 
 [![GitHub](https://img.shields.io/github/license/simonknittel/tp-tradfri)](./LICENSE)
 [![David](https://img.shields.io/david/simonknittel/tp-tradfri)](https://david-dm.org/simonknittel/tp-tradfri)
